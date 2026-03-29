@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>採用ダッシュボード</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface2: #f0f2f7;
+  --border: #e2e6ef;
+  --green: #14b87a;
+  --green-light: #e8faf3;
+  --blue: #2563eb;
+  --blue-light: #eff4ff;
+  --red: #ef4444;
+  --red-light: #fff1f1;
+  --yellow: #f59e0b;
+  --yellow-light: #fffbeb;
+  --text: #1a1f2e;
+  --muted: #8491a8;
+  --font: 'Noto Sans JP', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --shadow: 0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; padding-bottom:40px; }
+
+.header {
+  background:#fff; border-bottom:1px solid var(--border);
+  padding:14px 18px; position:sticky; top:0; z-index:200;
+  display:flex; align-items:center; justify-content:space-between;
+  box-shadow:0 1px 6px rgba(0,0,0,0.06);
+}
+.header-brand { display:flex; align-items:center; gap:10px; }
+.header-icon {
+  width:32px; height:32px; border-radius:9px;
+  background:linear-gradient(135deg,#14b87a,#2563eb);
+  display:flex; align-items:center; justify-content:center; font-size:15px;
+}
+.header-title { font-size:14px; font-weight:900; color:var(--text); }
+.header-sub { font-size:10px; color:var(--muted); font-family:var(--mono); }
+.month-chip { background:var(--green-light); color:var(--green); font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; }
+
+.tabs { display:flex; background:#fff; border-bottom:1px solid var(--border); overflow-x:auto; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab {
+  flex:1; min-width:62px; padding:11px 4px; font-size:11px; font-weight:700;
+  text-align:center; cursor:pointer; color:var(--muted); border:none;
+  border-bottom:2px solid transparent; background:none; font-family:var(--font);
+  transition:all 0.18s; white-space:nowrap;
+}
+.tab.active { color:var(--green); border-bottom-color:var(--green); }
+
+.content { display:none; padding:14px; }
+.content.active { display:block; }
+
+.kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.kpi-card { background:#fff; border-radius:14px; padding:14px; box-shadow:var(--shadow); }
+.kpi-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:10px; }
+.kpi-label { font-size:12px; font-weight:700; color:var(--muted); letter-spacing:0.06em; margin-bottom:4px; }
+.kpi-value { font-size:34px; font-weight:900; font-family:var(--mono); line-height:1; }
+.kpi-sub { font-size:12px; color:var(--muted); margin-top:3px; }
+.kpi-card.g .kpi-icon { background:var(--green-light); }
+.kpi-card.b .kpi-icon { background:var(--blue-light); }
+.kpi-card.r .kpi-icon { background:var(--red-light); }
+.kpi-card.y .kpi-icon { background:var(--yellow-light); }
+.kpi-card.g .kpi-value { color:var(--green); }
+.kpi-card.b .kpi-value { color:var(--blue); }
+.kpi-card.r .kpi-value { color:var(--red); }
+.kpi-card.y .kpi-value { color:var(--yellow); }
+
+.net-card {
+  background:linear-gradient(135deg,#14b87a,#2563eb); border-radius:16px;
+  padding:18px; color:#fff; margin-bottom:14px;
+  box-shadow:0 4px 20px rgba(20,184,122,0.25);
+}
+.net-card-label { font-size:13px; font-weight:700; opacity:0.8; letter-spacing:0.08em; margin-bottom:6px; }
+.net-card-value { font-size:36px; font-weight:900; font-family:var(--mono); }
+.net-card-sub { font-size:13px; opacity:0.7; margin-top:4px; }
+
+.section { background:#fff; border-radius:14px; padding:16px; margin-bottom:12px; box-shadow:var(--shadow); }
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.section-title { font-size:14px; font-weight:700; color:var(--text); }
+.edit-btn {
+  font-size:12px; font-weight:700; color:var(--blue); background:var(--blue-light);
+  border:none; border-radius:6px; padding:4px 10px; cursor:pointer; font-family:var(--font);
+}
+
+.applicant-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+.applicant-item:last-child { border-bottom:none; }
+.applicant-num { font-family:var(--mono); font-size:12px; color:var(--muted); width:20px; flex-shrink:0; text-align:center; }
+.applicant-info { flex:1; }
+.applicant-name { font-size:14px; font-weight:700; }
+.applicant-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+.badge { display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; flex-shrink:0; }
+.bi { background:#fff3e0; color:#e65100; }
+.be { background:#e3f2fd; color:#1565c0; }
+.ba { background:#fce4ec; color:#ad1457; }
+.bo { background:var(--surface2); color:var(--muted); }
+
+.chart-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.chart-label { font-size:13px; width:96px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chart-track { flex:1; height:20px; background:var(--surface2); border-radius:5px; overflow:hidden; }
+.chart-fill {
+  height:100%; border-radius:5px;
+  background:linear-gradient(90deg,var(--green),var(--blue));
+  transition:width 0.7s cubic-bezier(.4,0,.2,1);
+}
+.chart-num { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--green); width:34px; text-align:right; }
+.media-group-title { font-size:12px; font-weight:700; color:var(--muted); letter-spacing:0.08em; margin:12px 0 8px; }
+
+.goal-item { margin-bottom:18px; }
+.goal-item:last-child { margin-bottom:0; }
+.goal-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.goal-name { font-size:14px; font-weight:700; }
+.goal-nums { font-family:var(--mono); font-size:14px; }
+.goal-track { height:10px; background:var(--surface2); border-radius:20px; overflow:hidden; }
+.goal-fill { height:100%; border-radius:20px; transition:width 0.7s cubic-bezier(.4,0,.2,1); }
+.gf-over { background:var(--blue); }
+.gf-good { background:var(--green); }
+.gf-mid { background:var(--yellow); }
+.gf-low { background:var(--red); }
+.goal-pct { font-size:12px; color:var(--muted); margin-top:3px; font-family:var(--mono); text-align:right; }
+
+.fin-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); }
+.fin-row:last-child { border-bottom:none; }
+.fin-label { font-size:14px; color:var(--muted); }
+.fin-val { font-family:var(--mono); font-size:15px; font-weight:700; }
+.fv-pos { color:var(--green); }
+.fv-neg { color:var(--red); }
+
+.wallet-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.wallet-card { background:var(--surface2); border-radius:10px; padding:12px; }
+.wallet-bank { font-size:12px; font-weight:700; color:var(--muted); margin-bottom:4px; }
+.wallet-val { font-family:var(--mono); font-size:17px; font-weight:700; color:var(--text); }
+.wallet-total {
+  grid-column:1/-1; background:var(--green-light); border-radius:10px; padding:12px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.wallet-total-label { font-size:13px; font-weight:700; color:var(--green); }
+.wallet-total-val { font-family:var(--mono); font-size:20px; font-weight:900; color:var(--green); }
+
+.hire-item { display:flex; gap:10px; padding:11px 0; border-bottom:1px solid var(--border); }
+.hire-item:last-child { border-bottom:none; }
+.hire-dot { width:8px; height:8px; border-radius:50%; background:var(--green); margin-top:6px; flex-shrink:0; }
+.hire-name { font-size:14px; font-weight:700; }
+.hire-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+
+.form-group { margin-bottom:12px; }
+.form-label { font-size:13px; font-weight:700; color:var(--muted); letter-spacing:0.06em; display:block; margin-bottom:5px; }
+.form-input {
+  width:100%; background:var(--surface2); border:1.5px solid var(--border);
+  border-radius:9px; padding:11px 13px; color:var(--text);
+  font-family:var(--font); font-size:15px; outline:none; transition:border-color 0.2s;
+}
+.form-input:focus { border-color:var(--green); background:#fff; }
+.form-input::placeholder { color:var(--muted); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.btn-primary {
+  width:100%; padding:14px; background:var(--green); color:#fff;
+  border:none; border-radius:10px; font-size:15px; font-weight:900;
+  font-family:var(--font); cursor:pointer; box-shadow:0 2px 10px rgba(20,184,122,0.3);
+  transition:opacity 0.18s;
+}
+.btn-primary:active { opacity:0.82; }
+
+.date-nav {
+  background:#fff; border-radius:12px; padding:10px 14px; margin-bottom:12px;
+  box-shadow:var(--shadow); display:flex; align-items:center; justify-content:space-between;
+}
+.date-nav-btn {
+  background:var(--surface2); border:none; border-radius:8px;
+  width:34px; height:34px; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.date-nav-center { text-align:center; }
+.date-nav-label { font-size:14px; font-weight:700; }
+.date-nav-sub { font-size:10px; color:var(--muted); margin-top:2px; font-family:var(--mono); }
+
+.notice { background:var(--green-light); border-radius:10px; padding:10px 13px; font-size:12px; color:var(--green); font-weight:700; margin-bottom:14px; }
+
+.show-more { width:100%; padding:9px; background:var(--surface2); border:none; border-radius:8px; color:var(--muted); font-size:12px; font-family:var(--font); cursor:pointer; margin-top:8px; }
+
+.log-item { padding:12px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+.log-item:last-child { border-bottom:none; }
+.log-item:active { opacity:0.7; }
+.log-item-header { display:flex; justify-content:space-between; align-items:center; }
+.log-date { font-size:13px; font-weight:700; }
+.log-count { font-family:var(--mono); font-size:16px; font-weight:700; color:var(--green); }
+.log-stats { font-size:11px; color:var(--muted); margin-top:3px; }
+.log-memo { font-size:11px; color:var(--green); margin-top:3px; }
+.log-empty { text-align:center; padding:24px; color:var(--muted); font-size:13px; }
+
+.inline-edit { display:none; margin-top:14px; }
+.inline-edit.open { display:block; }
+
+.day-header {
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  border-radius:14px; padding:14px 16px; color:#fff; margin-bottom:14px;
+}
+.day-header-date { font-size:16px; font-weight:900; margin-bottom:3px; }
+.day-header-sub { font-size:11px; opacity:0.8; }
+
+.subtabs { display:flex; gap:8px; margin-bottom:14px; }
+.subtab {
+  flex:1; padding:9px 4px; border-radius:8px; text-align:center;
+  font-size:12px; font-weight:700; cursor:pointer; border:none;
+  background:var(--surface2); color:var(--muted); font-family:var(--font); transition:all 0.15s;
+}
+.subtab.active { background:var(--green); color:#fff; }
+
+.empty-day { text-align:center; padding:40px 16px; color:var(--muted); font-size:13px; line-height:1.8; }
+
+.goal-edit-block { background:var(--surface2); border-radius:10px; padding:12px; margin-bottom:10px; }
+.goal-edit-block-title { font-size:12px; font-weight:700; margin-bottom:8px; }
+
+/* ファネル */
+.funnel-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.funnel-label { font-size:11px; font-weight:700; width:50px; flex-shrink:0; }
+.funnel-bar-wrap { flex:1; height:28px; background:var(--surface2); border-radius:6px; overflow:hidden; position:relative; }
+.funnel-bar { height:100%; border-radius:6px; display:flex; align-items:center; padding-left:10px; transition:width 0.7s; }
+.funnel-bar span { font-size:11px; font-weight:700; color:#fff; font-family:var(--mono); }
+.funnel-rate { font-size:12px; font-family:var(--mono); color:var(--muted); width:72px; text-align:right; flex-shrink:0; }
+.funnel-arrow { text-align:center; font-size:11px; color:var(--muted); margin:-4px 0 4px 60px; }
+
+/* 年齢・性別 */
+.ag-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.ag-card { background:var(--surface2); border-radius:10px; padding:12px; }
+.ag-title { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:0.06em; margin-bottom:10px; }
+.ag-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.ag-bar-label { font-size:10px; width:52px; flex-shrink:0; }
+.ag-bar-track { flex:1; height:14px; background:#e2e6ef; border-radius:4px; overflow:hidden; }
+.ag-bar-fill { height:100%; border-radius:4px; }
+.ag-bar-val { font-size:10px; font-family:var(--mono); font-weight:700; width:28px; text-align:right; }
+.pie-wrap { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:4px; }
+.pie-legend { font-size:11px; display:flex; flex-direction:column; gap:6px; }
+.pie-legend-item { display:flex; align-items:center; gap:6px; }
+.pie-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* 予測 */
+.forecast-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
+.forecast-row:last-child { border-bottom:none; }
+.forecast-label { font-size:12px; font-weight:700; }
+.forecast-vals { font-family:var(--mono); font-size:12px; text-align:right; }
+.forecast-cur { color:var(--green); font-weight:700; }
+.forecast-pred { color:var(--muted); font-size:10px; margin-top:2px; }
+.forecast-status { font-size:11px; font-weight:700; padding:3px 8px; border-radius:20px; }
+.fs-ok { background:var(--green-light); color:var(--green); }
+.fs-ng { background:var(--red-light); color:var(--red); }
+.fs-warn { background:var(--yellow-light); color:var(--yellow); }
+.fs-done { background:var(--blue-light); color:var(--blue); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">
+    <div class="header-icon">📋</div>
+    <div>
+      <div class="header-title">採用ダッシュボード</div>
+      <div class="header-sub" id="hdr-date"></div>
+    </div>
+  </div>
+  <div class="month-chip" id="hdr-month">3月</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('daily')">📋 日報</button>
+  <button class="tab" onclick="showTab('monthly')">📊 月次</button>
+  <button class="tab" onclick="showTab('goal')">🎯 目標</button>
+  <button class="tab" onclick="showTab('finance')">💰 財務</button>
+  <button class="tab" onclick="showTab('input')">✏️ 入力</button>
+</div>
+
+<!-- 日報 -->
+<div id="tab-daily" class="content active">
+  <div class="date-nav">
+    <button class="date-nav-btn" onclick="navDay(1)">‹</button>
+    <div class="date-nav-center">
+      <div class="date-nav-label" id="daily-nav-label">—</div>
+      <div class="date-nav-sub" id="daily-nav-sub"></div>
+    </div>
+    <button class="date-nav-btn" onclick="navDay(-1)">›</button>
+  </div>
+  <div id="daily-view"></div>
+</div>
+
+<!-- 月次 -->
+<div id="tab-monthly" class="content">
+  <div class="kpi-grid">
+    <div class="kpi-card g"><div class="kpi-icon">📥</div><div class="kpi-label">月間応募</div><div class="kpi-value" style="color:var(--text)" id="m-obo">481</div><div class="kpi-sub">3月累計</div></div>
+    <div class="kpi-card b"><div class="kpi-icon">💬</div><div class="kpi-label">面談</div><div class="kpi-value" style="color:var(--text)" id="m-mendan">47</div><div class="kpi-sub">3月累計</div></div>
+    <div class="kpi-card y"><div class="kpi-icon">🤝</div><div class="kpi-label">面接</div><div class="kpi-value" style="color:var(--text)" id="m-mensetu">9</div><div class="kpi-sub">3月累計</div></div>
+    <div class="kpi-card r"><div class="kpi-icon">✅</div><div class="kpi-label">採用</div><div class="kpi-value" style="color:var(--text)" id="m-saiyo">5</div><div class="kpi-sub">3月累計</div></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><div class="section-title">媒体別応募数（Indeed）</div></div>
+    <div id="indeed-chart"></div>
+    <div class="media-group-title">▸ その他媒体</div>
+    <div id="other-chart"></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><div class="section-title">採用者</div></div>
+    <div id="hires-list"></div>
+  </div>
+
+  <!-- ① 転換率ファネル -->
+  <div class="section">
+    <div class="section-header"><div class="section-title">転換率（ファネル）</div></div>
+    <div id="funnel-chart"></div>
+  </div>
+
+  <!-- ④ 年齢・性別分布 -->
+  <div class="section">
+    <div class="section-header"><div class="section-title">応募者 年齢・性別分布</div></div>
+    <div id="age-gender-chart"></div>
+  </div>
+</div>
+
+<!-- 目標 -->
+<div id="tab-goal" class="content">
+  <div class="section">
+    <div class="section-header"><div class="section-title">西田 目標進捗</div></div>
+    <div id="goal-view-nishida"></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><div class="section-title">品川 目標進捗</div></div>
+    <div id="goal-view-shinagawa"></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><div class="section-title">目標達成予測（月末）</div></div>
+    <div id="forecast-chart"></div>
+  </div>
+</div>
+
+<!-- 財務 -->
+<div id="tab-finance" class="content">
+  <div class="net-card">
+    <div class="net-card-label">純利益 · 3月</div>
+    <div class="net-card-value" id="net-display">¥285,511</div>
+    <div class="net-card-sub" id="net-sub"></div>
+  </div>
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">損益明細</div>
+    </div>
+    <div id="fin-view">
+      <div class="fin-row"><div class="fin-label">人材売上</div><div class="fin-val fv-pos" id="fv-jinzai"></div></div>
+      <div class="fin-row"><div class="fin-label">他売上</div><div class="fin-val fv-pos" id="fv-hoka"></div></div>
+      <div class="fin-row"><div class="fin-label">経費</div><div class="fin-val fv-neg" id="fv-keihi"></div></div>
+      <div class="fin-row"><div class="fin-label">税</div><div class="fin-val fv-neg" id="fv-zei"></div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">口座残高</div>
+    </div>
+    <div class="wallet-grid" id="wallet-grid"></div>
+  </div>
+</div>
+
+<!-- 入力 -->
+<div id="tab-input" class="content">
+  <div class="notice">📝 入力した日報は日報タブで日付指定して確認できます</div>
+  <div class="section">
+    <div class="section-header"><div class="section-title">日報入力</div></div>
+    <div class="form-group"><label class="form-label">日付</label><input type="date" class="form-input" id="in-date"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">応募数</label><input type="number" class="form-input" id="in-obo" placeholder="0"></div>
+      <div class="form-group"><label class="form-label">面談数</label><input type="number" class="form-input" id="in-mendan" placeholder="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">面接数</label><input type="number" class="form-input" id="in-mensetu" placeholder="0"></div>
+      <div class="form-group"><label class="form-label">採用数</label><input type="number" class="form-input" id="in-saiyo" placeholder="0"></div>
+    </div>
+    <div class="form-group"><label class="form-label">応募者（1行1名: 名前／職種／企業媒体）</label><textarea class="form-input" id="in-applicants" rows="5" placeholder="田中様30歳女性／一般事務／関西福祉indeed"></textarea></div>
+    <div class="form-group"><label class="form-label">採用者（1行1名）</label><textarea class="form-input" id="in-hires" rows="2" placeholder="（採用者がいる場合）"></textarea></div>
+    <div class="form-group"><label class="form-label">メモ</label><textarea class="form-input" id="in-memo" rows="2" placeholder="特記事項があれば"></textarea></div>
+    <button class="btn-primary" onclick="submitDaily()">日報を登録 →</button>
+  </div>
+  <div class="section">
+    <div class="section-header"><div class="section-title">登録済み日報一覧</div></div>
+    <div id="log-list"><div class="log-empty">まだ登録がありません</div></div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+let dailyLogs = [
+  {
+    date:'2025-03-28', obo:10, mendan:4, mensetu:0, saiyo:0, memo:'',
+    applicants:[
+      {name:'松原様',age:65,sex:'女',job:'一般事務',co:'LB',media:'indeed'},
+      {name:'今田様',age:35,sex:'女',job:'一般事務',co:'サンライト',media:'indeed'},
+      {name:'三上様',age:61,sex:'女',job:'一般事務',co:'松坂屋',media:'indeed'},
+      {name:'高橋様',age:66,sex:'男',job:'一般事務',co:'松坂屋',media:'indeed'},
+      {name:'溝内様',age:24,sex:'女',job:'一般事務',co:'焼賣太樓',media:'indeed'},
+      {name:'篠原様',age:58,sex:'女',job:'一般事務',co:'関西福祉',media:'indeed'},
+      {name:'倉元様',age:52,sex:'女',job:'一般事務',co:'関西福祉',media:'indeed'},
+      {name:'辻様',age:53,sex:'女',job:'一般事務',co:'関西福祉',media:'indeed'},
+      {name:'村上様',age:50,sex:'女',job:'一般事務',co:'関西福祉',media:'indeed'},
+      {name:'岩橋様',age:27,sex:'女',job:'一般事務',co:'関西福祉',media:'engage'},
+    ],
+    hires:[]
+  },
+  {
+    date:'2025-03-27', obo:18, mendan:3, mensetu:0, saiyo:0, memo:'',
+    applicants:[
+      {name:'加東様',age:24,sex:'女',job:'一般事務',co:'JDREAM',media:'indeed'},
+      {name:'堀中様',age:30,sex:'女',job:'一般事務',co:'HTF',media:'indeed'},
+      {name:'岡田様',age:30,sex:'男',job:'一般事務',co:'サンライト',media:'indeed'},
+      {name:'ズン様',age:37,sex:'女',job:'一般事務',co:'つかもと流',media:'indeed'},
+      {name:'宅美様',age:61,sex:'女',job:'一般事務',co:'つかもと流',media:'indeed'},
+      {name:'八木様',age:18,sex:'男',job:'一般事務',co:'つかもと流',media:'indeed'},
+      {name:'平川様',age:32,sex:'女',job:'一般事務',co:'つかもと流',media:'indeed'},
+      {name:'夏様',age:37,sex:'女',job:'一般事務',co:'つかもと流',media:'indeed'},
+      {name:'針谷様',age:37,sex:'女',job:'一般事務',co:'松坂屋',media:'indeed'},
+      {name:'小嶋様',age:31,sex:'女',job:'一般事務',co:'松坂屋',media:'indeed'},
+      {name:'広瀬様',age:34,sex:'女',job:'一般事務',co:'焼賣太樓',media:'indeed'},
+      {name:'羅様',age:23,sex:'男',job:'一般事務',co:'関西福祉',media:'indeed'},
+      {name:'林様',age:45,sex:'女',job:'一般事務',co:'関西福祉',media:'indeed'},
+      {name:'美濃様',age:56,sex:'女',job:'一般事務',co:'関西福祉',media:'indeed'},
+      {name:'許様',age:26,sex:'女',job:'一般事務',co:'関西福祉',media:'engage'},
+      {name:'小倉様',age:24,sex:'女',job:'一般事務',co:'関西福祉',media:'engage'},
+      {name:'根本様',age:27,sex:'女',job:'一般事務',co:'ライフ',media:'airwork'},
+      {name:'上ノ坊様',age:48,sex:'男',job:'一般事務',co:'Axe',media:'airwork'},
+    ],
+    hires:[]
+  }
+];
+
+let monthlyData = {obo:481,mendan:47,mensetu:9,saiyo:5};
+
+const indeedData = [
+  {co:'関西福祉',n:130},{co:'松坂屋',n:84},{co:'サンライト',n:42},
+  {co:'つかもと流',n:36},{co:'関西フーズ',n:32},{co:'JDREAM',n:26},
+  {co:'カーム',n:21},{co:'LB',n:20},{co:'焼賣太樓',n:14},
+  {co:'HTF',n:7},{co:'アシスト',n:6},{co:'HSP',n:4},{co:'RSP',n:2},
+];
+const otherData = [
+  {co:'関西福祉エンゲージ',n:26},{co:'508エアワーク',n:9},
+  {co:'ライフエアワーク',n:6},{co:'Axeエアワーク',n:5},
+  {co:'HTFエンゲージ',n:2},{co:'品川スレッズ',n:2},
+  {co:'エスビエンポケ',n:2},{co:'西田紹介',n:1},
+  {co:'Aidエアワーク',n:1},{co:'焼賣太樓ジモティー',n:1},
+];
+const hiresData = [
+  {name:'岡村様',age:24,sex:'男',job:'営業',co:'井ノ岡スレッズ'},
+  {name:'ゆうか様',age:null,sex:null,job:'スナック',co:'品川スレッズ'},
+  {name:'藤原様',age:23,sex:'女',job:'一般事務',co:'つかもと流indeed'},
+  {name:'錦織様',age:26,sex:'女',job:'アーキ',co:'関西福祉indeed'},
+  {name:'大坂様',age:28,sex:'男',job:'総合キャリアオプション',co:'西田紹介'},
+];
+
+let goals = {
+  nishida:[
+    {name:'媒体以外応募',current:17,target:50},
+    {name:'媒体以外面談',current:2,target:15},
+    {name:'媒体以外内定',current:3,target:3},
+  ],
+  shinagawa:[
+    {name:'媒体応募',current:481,target:400},
+    {name:'媒体面談',current:45,target:50},
+    {name:'媒体内定',current:2,target:5},
+  ],
+};
+
+let financeData = {jinzai:693000, hoka:1130000, keihi:-1355189, zei:-182300};
+let wallets = [
+  {name:'住信SBI',val:15767},{name:'ペイペイ',val:29126},
+  {name:'楽天',val:32234},{name:'現金',val:81},
+];
+
+// ===== DAILY TAB =====
+let currentOffset = 0;
+
+function getSortedDates() {
+  return dailyLogs.map(l=>l.date).sort((a,b)=>b.localeCompare(a));
+}
+
+function dateLabel(str) {
+  const d = new Date(str + 'T00:00:00');
+  const days = ['日','月','火','水','木','金','土'];
+  return `${d.getMonth()+1}/${d.getDate()}（${days[d.getDay()]}）`;
+}
+
+function navDay(dir) {
+  const dates = getSortedDates();
+  currentOffset = Math.max(0, Math.min(dates.length-1, currentOffset+dir));
+  renderDailyTab();
+}
+
+function renderDailyTab() {
+  const dates = getSortedDates();
+  const navLabel = document.getElementById('daily-nav-label');
+  const navSub = document.getElementById('daily-nav-sub');
+  const view = document.getElementById('daily-view');
+
+  if (!dates.length) {
+    navLabel.textContent = '—';
+    navSub.textContent = '';
+    view.innerHTML = '<div class="empty-day">まだ日報が登録されていません<br>✏️ 入力タブから登録してください</div>';
+    return;
+  }
+
+  const dateStr = dates[currentOffset];
+  const log = dailyLogs.find(l=>l.date===dateStr);
+  navLabel.textContent = dateLabel(dateStr);
+  navSub.textContent = `${currentOffset+1} / ${dates.length} 件`;
+
+  if (!log) { view.innerHTML='<div class="empty-day">この日の日報はありません</div>'; return; }
+
+  let appHTML = '';
+  if (log.applicants && log.applicants.length) {
+    const shown = log.applicants;
+    appHTML = `<div class="section">
+      <div class="section-header"><div class="section-title">応募者リスト（${log.applicants.length}名）</div></div>
+      <div>${shown.map((a,i)=>appItemHTML(a,i)).join('')}</div>
+    </div>`;
+  }
+
+  let hiresHTML = '';
+  if (log.hires && log.hires.length) {
+    hiresHTML = `<div class="section">
+      <div class="section-header"><div class="section-title">本日の採用者</div></div>
+      ${log.hires.map(h=>`<div class="hire-item"><div class="hire-dot"></div><div><div class="hire-name">${h}</div></div></div>`).join('')}
+    </div>`;
+  }
+
+  view.innerHTML = `
+    <div class="day-header">
+      <div class="day-header-date">${dateLabel(dateStr)}</div>
+      <div class="day-header-sub">${log.memo||'特記事項なし'}</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card g"><div class="kpi-icon">📥</div><div class="kpi-label">応募</div><div class="kpi-value" style="color:var(--text)">${log.obo}</div><div class="kpi-sub">本日</div></div>
+      <div class="kpi-card b"><div class="kpi-icon">💬</div><div class="kpi-label">面談</div><div class="kpi-value" style="color:var(--text)">${log.mendan}</div><div class="kpi-sub">本日</div></div>
+      <div class="kpi-card y"><div class="kpi-icon">🤝</div><div class="kpi-label">面接</div><div class="kpi-value" style="color:var(--text)">${log.mensetu}</div><div class="kpi-sub">本日</div></div>
+      <div class="kpi-card r"><div class="kpi-icon">✅</div><div class="kpi-label">採用</div><div class="kpi-value" style="color:var(--text)">${log.saiyo}</div><div class="kpi-sub">本日</div></div>
+    </div>
+    ${appHTML}${hiresHTML}`;
+}
+
+function appItemHTML(a, i) {
+  const mc = a.media==='indeed'?'bi':a.media==='engage'?'be':a.media==='airwork'?'ba':'bo';
+  const ml = a.media==='indeed'?'Indeed':a.media==='engage'?'エンゲージ':a.media==='airwork'?'エアワーク':'その他';
+  return `<div class="applicant-item">
+    <div class="applicant-num">${String(i+1).padStart(2,'0')}</div>
+    <div class="applicant-info">
+      <div class="applicant-name">${a.name}${a.age?` <span style="font-size:11px;font-weight:400;color:var(--muted)">${a.age}歳<span style="color:${a.sex==='女'?'var(--red)':'var(--blue)'}">${a.sex}</span></span>`:''}</div>
+      <div class="applicant-meta">${a.co}${a.job?' · '+a.job:''}</div>
+    </div>
+    <span class="badge ${mc}">${ml}</span>
+  </div>`;
+}
+
+let appOpen = false;
+function toggleApp(restCount) {
+  appOpen = !appOpen;
+  const el = document.getElementById('app-rest');
+  const btn = document.getElementById('app-toggle-btn');
+  if (el) el.style.display = appOpen ? 'block' : 'none';
+  if (btn) btn.textContent = appOpen ? '▲ 閉じる' : `▼ あと${restCount}名を表示`;
+}
+
+// ===== MONTHLY =====
+function renderChart(id, data, maxN) {
+  document.getElementById(id).innerHTML = data.map(d=>`
+    <div class="chart-row">
+      <div class="chart-label">${d.co}</div>
+      <div class="chart-track">
+        <div class="chart-fill" style="width:${Math.round(d.n/maxN*100)}%"></div>
+      </div>
+      <div class="chart-num">${d.n}</div>
+    </div>`).join('');
+}
+
+function renderHires() {
+  document.getElementById('hires-list').innerHTML = hiresData.map(h=>`
+    <div class="hire-item">
+      <div class="hire-dot"></div>
+      <div>
+        <div class="hire-name">${h.name}${h.age?` <span style="font-size:11px;font-weight:400;color:var(--muted)">${h.age}歳<span style="color:${h.sex==='女'?'var(--red)':'var(--blue)'}">${h.sex}</span></span>`:''}</div>
+        <div class="hire-meta">${h.job} · ${h.co}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ① 転換率ファネル
+function renderFunnel() {
+  const obo = monthlyData.obo;
+  const mendan = monthlyData.mendan;
+  const mensetu = monthlyData.mensetu;
+  const saiyo = monthlyData.saiyo;
+  const steps = [
+    {label:'応募', n:obo,  color:'#2563eb'},
+    {label:'面談', n:mendan, color:'#14b87a'},
+    {label:'面接', n:mensetu, color:'#f59e0b'},
+    {label:'採用', n:saiyo,  color:'#ef4444'},
+  ];
+  const max = obo;
+  let html = '';
+  steps.forEach((s, i) => {
+    const pct = max > 0 ? Math.round(s.n / max * 100) : 0;
+    const rate = i === 0 ? '100%' : (steps[i-1].n > 0 ? Math.round(s.n/steps[i-1].n*100)+'%' : '0%');
+    if (i > 0) html += `<div class="funnel-arrow" style="color:var(--text)">▼ 通過率 ${rate}</div>`;
+    html += `<div class="funnel-row">
+      <div class="funnel-label">${s.label}</div>
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar" style="width:${Math.max(pct,4)}%;background:${s.color}"></div>
+      </div>
+      <div class="funnel-rate"><span style="color:var(--text);font-weight:700">${s.n}件</span> <span style="color:var(--text)">${pct}%</span></div>
+    </div>`;
+  });
+  document.getElementById('funnel-chart').innerHTML = html;
+}
+
+// ④ 年齢・性別分布
+function renderAgeGender() {
+  const allApplicants = dailyLogs.flatMap(l => l.applicants || []);
+  const total = allApplicants.length;
+  if (total === 0) {
+    document.getElementById('age-gender-chart').innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px">データなし</div>';
+    return;
+  }
+  // 性別
+  const female = allApplicants.filter(a => a.sex === '女').length;
+  const male = allApplicants.filter(a => a.sex === '男').length;
+  const fPct = Math.round(female/total*100);
+  const mPct = 100 - fPct;
+  // 年齢帯
+  const ageBands = [
+    {label:'18〜34歳', min:18, max:34, color:'#2563eb'},
+    {label:'35〜44歳', min:35, max:44, color:'#14b87a'},
+    {label:'45歳〜',   min:45, max:99, color:'#f59e0b'},
+  ];
+  const ageCounts = ageBands.map(b => ({
+    ...b,
+    n: allApplicants.filter(a => a.age >= b.min && a.age <= b.max).length
+  }));
+  const maxAge = Math.max(...ageCounts.map(a => a.n), 1);
+
+  // SVG円グラフ（シンプル）
+  const r = 38; const cx = 44; const cy = 44;
+  let startAngle = -Math.PI/2;
+  const slices = [
+    {pct: fPct/100, color:'var(--red)', color2:'#ef4444', label:`女性 ${fPct}%`},
+    {pct: mPct/100, color:'var(--blue)', color2:'#2563eb', label:`男性 ${mPct}%`},
+  ];
+  let svgPaths = '';
+  slices.forEach(s => {
+    const angle = s.pct * 2 * Math.PI;
+    const x1 = cx + r * Math.cos(startAngle);
+    const y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(startAngle + angle);
+    const y2 = cy + r * Math.sin(startAngle + angle);
+    const large = angle > Math.PI ? 1 : 0;
+    svgPaths += `<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${s.color2}"/>`;
+    startAngle += angle;
+  });
+
+  document.getElementById('age-gender-chart').innerHTML = `
+    <div class="ag-grid">
+      <div class="ag-card">
+        <div class="ag-title">性別分布（計${total}名）</div>
+        <div class="pie-wrap">
+          <svg width="88" height="88" viewBox="0 0 88 88">${svgPaths}</svg>
+          <div class="pie-legend">
+            <div class="pie-legend-item"><div class="pie-dot" style="background:#ef4444"></div><span style="font-size:11px">女性 ${female}名 (${fPct}%)</span></div>
+            <div class="pie-legend-item"><div class="pie-dot" style="background:#2563eb"></div><span style="font-size:11px">男性 ${male}名 (${mPct}%)</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ag-card">
+        <div class="ag-title">年齢帯分布（計${total}名）</div>
+        ${ageCounts.map(a => {
+          const pct = total > 0 ? Math.round(a.n/total*100) : 0;
+          return `
+          <div class="ag-bar-row">
+            <div class="ag-bar-label">${a.label}</div>
+            <div class="ag-bar-track">
+              <div class="ag-bar-fill" style="width:${Math.round(a.n/maxAge*100)}%;background:${a.color}"></div>
+            </div>
+            <div class="ag-bar-val" style="color:${a.color};width:64px">${a.n}名 <span style="color:var(--muted);font-size:9px">${pct}%</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+// ⑤ 目標達成予測
+function renderForecast() {
+  const today = new Date();
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+  const daysPassed = today.getDate();
+  const daysLeft = daysInMonth - daysPassed;
+  const allGoals = [
+    ...goals.nishida.map(g => ({...g, team:'西田'})),
+    ...goals.shinagawa.map(g => ({...g, team:'品川'})),
+  ];
+  document.getElementById('forecast-chart').innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;font-family:monospace">残り ${daysLeft}日 / 月${daysInMonth}日中${daysPassed}日経過</div>
+    ${allGoals.map(g => {
+      const dailyRate = daysPassed > 0 ? g.current / daysPassed : 0;
+      const predicted = Math.round(g.current + dailyRate * daysLeft);
+      const willReach = predicted >= g.target;
+      const pct = Math.round(g.current / g.target * 100);
+      const statusCls = pct >= 100 ? 'fs-done' : willReach ? 'fs-ok' : pct >= 70 ? 'fs-warn' : 'fs-ng';
+      const statusLabel = pct >= 100 ? '達成済み' : willReach ? '達成見込み' : pct >= 70 ? '要注意' : '未達リスク';
+      return `<div class="forecast-row">
+        <div>
+          <div class="forecast-label">${g.team} · ${g.name}</div>
+          <div class="forecast-pred">予測: ${predicted}件 / 目標: ${g.target}件</div>
+        </div>
+        <div style="text-align:right">
+          <div class="forecast-vals"><span class="forecast-cur">${g.current}</span><span style="color:var(--muted)"> / ${g.target}</span></div>
+          <div style="margin-top:4px"><span class="forecast-status ${statusCls}">${statusLabel}</span></div>
+        </div>
+      </div>`;
+    }).join('')}`;
+}
+
+// ===== GOALS =====
+function showGoalTab(key) {
+  ['nishida','shinagawa'].forEach(k=>{
+    document.getElementById('goal-section-'+k).style.display = k===key?'block':'none';
+    document.getElementById('st-'+k).classList.toggle('active', k===key);
+  });
+}
+
+function renderGoals(key) {
+  document.getElementById('goal-view-'+key).innerHTML = goals[key].map((g,i)=>{
+    const pct = g.target>0 ? Math.min(g.current/g.target*100,110) : 0;
+    const cls = pct>=100?'gf-over':pct>=70?'gf-good':pct>=40?'gf-mid':'gf-low';
+    const col = pct>=100?'var(--blue)':pct>=70?'var(--green)':pct>=40?'var(--yellow)':'var(--red)';
+    return `<div class="goal-item">
+      <div class="goal-row">
+        <div class="goal-name">${g.name}</div>
+        <div class="goal-nums"><span style="font-weight:700;color:${col}">${g.current}</span><span style="color:var(--muted)"> / ${g.target}</span></div>
+      </div>
+      <div class="goal-track"><div class="goal-fill ${cls}" style="width:${Math.min(pct,100)}%"></div></div>
+      <div class="goal-pct">${pct.toFixed(0)}%</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleGoalEdit(key) {
+  const el = document.getElementById('goal-edit-'+key);
+  if (el.classList.contains('open')) { el.classList.remove('open'); return; }
+  document.getElementById('goal-edit-inputs-'+key).innerHTML = goals[key].map((g,i)=>`
+    <div class="goal-edit-block">
+      <div class="goal-edit-block-title">${g.name}</div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">実績</label><input type="number" class="form-input" id="ge-cur-${key}-${i}" value="${g.current}"></div>
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">目標</label><input type="number" class="form-input" id="ge-tgt-${key}-${i}" value="${g.target}"></div>
+      </div>
+    </div>`).join('');
+  el.classList.add('open');
+}
+
+function saveGoals(key) {
+  goals[key].forEach((g,i)=>{
+    g.current = parseInt(document.getElementById(`ge-cur-${key}-${i}`).value)||0;
+    g.target  = parseInt(document.getElementById(`ge-tgt-${key}-${i}`).value)||1;
+  });
+  renderGoals(key);
+  document.getElementById('goal-edit-'+key).classList.remove('open');
+}
+
+// ===== FINANCE =====
+function calcNet() { return financeData.jinzai+financeData.hoka+financeData.keihi+financeData.zei; }
+
+function renderFinance() {
+  const fmt = v=>(v>=0?'+':'')+  '¥'+Math.abs(v).toLocaleString();
+  document.getElementById('fv-jinzai').textContent = fmt(financeData.jinzai);
+  document.getElementById('fv-hoka').textContent   = fmt(financeData.hoka);
+  document.getElementById('fv-keihi').textContent  = fmt(financeData.keihi);
+  document.getElementById('fv-zei').textContent    = fmt(financeData.zei);
+  const net = calcNet();
+  document.getElementById('net-display').textContent = (net<0?'-':'')+'¥'+Math.abs(net).toLocaleString();
+  document.getElementById('net-sub').textContent =
+    `売上 ¥${(financeData.jinzai+financeData.hoka).toLocaleString()} · 経費+税 ¥${Math.abs(financeData.keihi+financeData.zei).toLocaleString()}`;
+}
+
+function toggleFinEdit() {
+  const el = document.getElementById('fin-edit');
+  if (el.classList.contains('open')) { el.classList.remove('open'); return; }
+  document.getElementById('fe-jinzai').value = financeData.jinzai;
+  document.getElementById('fe-hoka').value   = financeData.hoka;
+  document.getElementById('fe-keihi').value  = financeData.keihi;
+  document.getElementById('fe-zei').value    = financeData.zei;
+  el.classList.add('open');
+}
+
+function saveFinance() {
+  financeData.jinzai = parseInt(document.getElementById('fe-jinzai').value)||0;
+  financeData.hoka   = parseInt(document.getElementById('fe-hoka').value)||0;
+  financeData.keihi  = parseInt(document.getElementById('fe-keihi').value)||0;
+  financeData.zei    = parseInt(document.getElementById('fe-zei').value)||0;
+  renderFinance();
+  document.getElementById('fin-edit').classList.remove('open');
+}
+
+function renderWallets() {
+  const total = wallets.reduce((s,w)=>s+w.val,0);
+  document.getElementById('wallet-grid').innerHTML =
+    wallets.map(w=>`<div class="wallet-card"><div class="wallet-bank">${w.name}</div><div class="wallet-val">¥${w.val.toLocaleString()}</div></div>`).join('') +
+    `<div class="wallet-total"><div class="wallet-total-label">合計</div><div class="wallet-total-val">¥${total.toLocaleString()}</div></div>`;
+}
+
+function toggleWalletEdit() {
+  const el = document.getElementById('wallet-edit');
+  if (el.classList.contains('open')) { el.classList.remove('open'); return; }
+  document.getElementById('wallet-inputs').innerHTML = wallets.map((w,i)=>`
+    <div class="form-group"><label class="form-label">${w.name}</label><input type="number" class="form-input" id="we-${i}" value="${w.val}"></div>`).join('');
+  el.classList.add('open');
+}
+
+function saveWallets() {
+  wallets.forEach((w,i)=>{ w.val=parseInt(document.getElementById('we-'+i).value)||0; });
+  renderWallets();
+  document.getElementById('wallet-edit').classList.remove('open');
+}
+
+// ===== INPUT =====
+function submitDaily() {
+  const date = document.getElementById('in-date').value;
+  if (!date) { alert('日付を入力してください'); return; }
+
+  const obo     = parseInt(document.getElementById('in-obo').value)||0;
+  const mendan  = parseInt(document.getElementById('in-mendan').value)||0;
+  const mensetu = parseInt(document.getElementById('in-mensetu').value)||0;
+  const saiyo   = parseInt(document.getElementById('in-saiyo').value)||0;
+  const appText = document.getElementById('in-applicants').value.trim();
+  const hireTxt = document.getElementById('in-hires').value.trim();
+  const memo    = document.getElementById('in-memo').value.trim();
+
+  const applicants = appText ? appText.split('\n').filter(Boolean).map(line=>{
+    const p = line.split('／');
+    const raw = (p[2]||'').toLowerCase();
+    const media = raw.includes('indeed')?'indeed':raw.includes('engage')||raw.includes('エンゲージ')?'engage':raw.includes('airwork')||raw.includes('エアワーク')?'airwork':'other';
+    return {name:p[0]||line, job:p[1]||'', co:p[2]||'', media, age:'', sex:''};
+  }) : [];
+
+  const hires = hireTxt ? hireTxt.split('\n').filter(Boolean) : [];
+  const existing = dailyLogs.find(l=>l.date===date);
+
+  if (existing) {
+    if (!confirm(`${dateLabel(date)} の日報はすでに登録されています。上書きしますか？`)) return;
+    Object.assign(existing, {obo,mendan,mensetu,saiyo,applicants,hires,memo});
+  } else {
+    dailyLogs.unshift({date,obo,mendan,mensetu,saiyo,applicants,hires,memo});
+    monthlyData.obo+=obo; monthlyData.mendan+=mendan; monthlyData.mensetu+=mensetu; monthlyData.saiyo+=saiyo;
+    document.getElementById('m-obo').textContent=monthlyData.obo;
+    document.getElementById('m-mendan').textContent=monthlyData.mendan;
+    document.getElementById('m-mensetu').textContent=monthlyData.mensetu;
+    document.getElementById('m-saiyo').textContent=monthlyData.saiyo;
+  }
+
+  currentOffset = 0;
+  renderDailyTab();
+  renderLog();
+  ['in-obo','in-mendan','in-mensetu','in-saiyo','in-applicants','in-hires','in-memo'].forEach(id=>{ document.getElementById(id).value=''; });
+  alert('✅ 日報を登録しました！');
+  showTab('daily');
+}
+
+function renderLog() {
+  const el = document.getElementById('log-list');
+  const sorted = [...dailyLogs].sort((a,b)=>b.date.localeCompare(a.date));
+  if (!sorted.length) { el.innerHTML='<div class="log-empty">まだ登録がありません</div>'; return; }
+  el.innerHTML = sorted.map(l=>`
+    <div class="log-item" onclick="jumpToLog('${l.date}')">
+      <div class="log-item-header">
+        <div class="log-date">${dateLabel(l.date)}</div>
+        <div class="log-count">${l.obo}<span style="font-size:10px;color:var(--muted)">件</span></div>
+      </div>
+      <div class="log-stats">面談${l.mendan} · 面接${l.mensetu} · 採用${l.saiyo}</div>
+      ${l.memo?`<div class="log-memo">${l.memo}</div>`:''}
+    </div>`).join('');
+}
+
+function jumpToLog(dateStr) {
+  const dates = getSortedDates();
+  const idx = dates.indexOf(dateStr);
+  if (idx>=0) { currentOffset=idx; renderDailyTab(); showTab('daily'); }
+}
+
+// ===== TABS =====
+function showTab(name) {
+  document.querySelectorAll('.content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(el=>{
+    if(el.getAttribute('onclick')&&el.getAttribute('onclick').includes("'"+name+"'")) el.classList.add('active');
+  });
+}
+
+// ===== INIT =====
+function init() {
+  const now = new Date();
+  document.getElementById('hdr-date').textContent = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} 更新`;
+  document.getElementById('hdr-month').textContent = `${now.getMonth()+1}月`;
+  document.getElementById('in-date').value = now.toISOString().split('T')[0];
+  renderDailyTab();
+  renderChart('indeed-chart',indeedData,130);
+  renderChart('other-chart',otherData,26);
+  renderHires();
+  renderFunnel();
+  renderAgeGender();
+  renderForecast();
+  renderGoals('nishida');
+  renderGoals('shinagawa');
+  renderFinance();
+  renderWallets();
+  renderLog();
+}
+init();
+</script>
+</body>
+</html>
